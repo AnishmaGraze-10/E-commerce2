@@ -281,17 +281,6 @@ export default function TryOnPage() {
 // Helpers: indices and drawing utilities
 type Landmark = { x: number; y: number; z: number }
 
-function pathFromPoints(ctx: CanvasRenderingContext2D, points: { x: number; y: number }[]) {
-	ctx.beginPath()
-	points.forEach((p, i) => {
-		const px = p.x
-		const py = p.y
-		if (i === 0) ctx.moveTo(px, py)
-		else ctx.lineTo(px, py)
-	})
-	ctx.closePath()
-}
-
 function applyLipstick(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: number, h: number, shade: Shade) {
 	// Full lip region using MediaPipe FaceMesh indices
 	// Full outer/inner lip contours (MediaPipe FaceMesh 468 indices, 20 each)

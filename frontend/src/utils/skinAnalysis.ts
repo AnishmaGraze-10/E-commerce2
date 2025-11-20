@@ -325,6 +325,3 @@ export class SkinAnalyzer {
 
 // Export singleton instance
 export const skinAnalyzer = new SkinAnalyzer()
-
-// Re-export types for easier importing
-export type { SkinAnalysisResult, SkinIssue }

@@ -13,8 +13,6 @@ export default function LoginPage() {
 	const [error, setError] = useState('')
 	const navigate = useNavigate()
 
-	const ADMIN_ACCESS_CODE = 'ADMIN2025'
-
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setLoading(true)

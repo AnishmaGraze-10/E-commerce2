@@ -19,7 +19,6 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip,
 type Metrics = { acne: number; darkCircles: number; hydration: number; glow: number }
 
 export default function DiaryPage() {
-  const [selfieUrl, setSelfieUrl] = useState<string>('')
   const [uploading, setUploading] = useState(false)
   const [entries, setEntries] = useState<any[]>([])
   const [deltas, setDeltas] = useState<Partial<Metrics>>({})
@@ -129,8 +128,6 @@ export default function DiaryPage() {
       }
     }
     
-    const url = URL.createObjectURL(f)
-    setSelfieUrl(url)
     await uploadSelfieFile(f)
   }
 

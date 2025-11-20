@@ -194,11 +194,11 @@ export default function CheckoutPage() {
 						<thead>
 							<tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th></tr>
 						</thead>
-						<tbody>
-							{items.map(i => (
-								<tr key={i._id}><td>{i.name}</td><td>₹{i.price}</td><td>{i.quantity}</td><td>₹{(i.price * i.quantity).toFixed(2)}</td></tr>
-							))}
-						</tbody>
+					<tbody>
+						{items.map(i => (
+							<tr key={i.id}><td>{i.product?.name || 'Unknown'}</td><td>₹{i.product?.price || 0}</td><td>{i.qty}</td><td>₹{((i.product?.price || 0) * i.qty).toFixed(2)}</td></tr>
+						))}
+					</tbody>
 						<tfoot>
 							<tr><th colSpan={3}>Grand Total</th><th>₹{total.toFixed(2)}</th></tr>
 						</tfoot>
