@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext'
 
 // Dynamic Language support with auto-detection
 type Language = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'gu' | 'kn' | 'ml' | 'mr' | 'pa' | 'ur'
+type AvailableLanguage = 'en' | 'hi' | 'ta' | 'te'
 
 const LANGUAGE_NAMES = {
 	en: 'English',
@@ -48,11 +49,11 @@ type UserContext = {
 	language?: Language
 }
 
-	type TranslationKeys = 'welcome' | 'voicePrompt' | 'analyzing' | 'recommendations' | 'addToCart' | 'startAnalysis' | 'openAR' | 'generateRoutine'
+type TranslationKeys = 'welcome' | 'voicePrompt' | 'analyzing' | 'recommendations' | 'addToCart' | 'startAnalysis' | 'openAR' | 'generateRoutine'
 
 type TranslationSet = Record<TranslationKeys, string>
 
-const TRANSLATIONS: Record<Language, TranslationSet> = {
+const TRANSLATIONS: Record<AvailableLanguage, TranslationSet> = {
 	en: {
 		welcome: "Hi! I'm your AI Beauty Assistant ✨ I can help with skin analysis, AR try-ons, personalized routines, and product recommendations. What would you like to explore today?",
 		voicePrompt: "Click the microphone to speak or type your message",
@@ -824,7 +825,7 @@ ${analysisResult.recommendations.tips.map(tip => `• ${tip}`).join('\n')}`
 					
 					<div style={{ display: 'flex', gap: 8, padding: 12, borderTop: '1px solid #ffc2d1', background: '#fff0f3', position: 'relative' }}>
 						<input
-							placeholder={TRANSLATIONS[currentLanguage]?.voicePrompt || "Click the microphone to speak or type your message"}
+							placeholder={(TRANSLATIONS[currentLanguage as AvailableLanguage] ?? TRANSLATIONS.en).voicePrompt || "Click the microphone to speak or type your message"}
 							value={input}
 							onChange={e => setInput(e.target.value)}
 							onKeyDown={handleKeyDown}
