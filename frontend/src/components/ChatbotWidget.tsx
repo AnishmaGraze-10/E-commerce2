@@ -48,7 +48,11 @@ type UserContext = {
 	language?: Language
 }
 
-	const TRANSLATIONS = {
+	type TranslationKeys = 'welcome' | 'voicePrompt' | 'analyzing' | 'recommendations' | 'addToCart' | 'startAnalysis' | 'openAR' | 'generateRoutine'
+
+type TranslationSet = Record<TranslationKeys, string>
+
+const TRANSLATIONS: Record<Language, TranslationSet> = {
 	en: {
 		welcome: "Hi! I'm your AI Beauty Assistant ✨ I can help with skin analysis, AR try-ons, personalized routines, and product recommendations. What would you like to explore today?",
 		voicePrompt: "Click the microphone to speak or type your message",
@@ -113,13 +117,6 @@ const TUTORIAL_VIDEOS = {
 	'eyeliner': 'https://youtube.com/watch?v=eyeliner-tutorial'
 }
 
-const MOOD_LOOKS = {
-	party: { name: 'Party Glam', description: 'Bold eyes, statement lips, glowing skin', products: ['Gold Eyeshadow', 'Rose Lipstick'] },
-	office: { name: 'Professional', description: 'Natural makeup, subtle enhancement', products: ['Fair Foundation', 'Nude Lipstick'] },
-	wedding: { name: 'Bridal Elegance', description: 'Soft, romantic, long-lasting', products: ['Fair Foundation', 'Rose Lipstick', 'Gold Eyeshadow'] },
-	casual: { name: 'Everyday Fresh', description: 'Light coverage, natural glow', products: ['BB Cream', 'Tinted Lip Balm'] }
-}
-
 export default function ChatbotWidget() {
 	const [open, setOpen] = useState(false)
 	const [messages, setMessages] = useState<Message[]>([
@@ -145,7 +142,8 @@ export default function ChatbotWidget() {
 			.catch((error) => console.error('Failed to load product catalog for assistant', error))
 	}, [])
 	const listRef = useRef<HTMLDivElement>(null)
-	const recognitionRef = useRef<SpeechRecognition | null>(null)
+	type SpeechRecognitionType = typeof window.SpeechRecognition | typeof window.webkitSpeechRecognition
+	const recognitionRef = useRef<InstanceType<SpeechRecognitionType> | null>(null)
 	const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
 
 	// Voice input/output functions
@@ -155,7 +153,7 @@ export default function ChatbotWidget() {
 			return false
 		}
 
-		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+		const SpeechRecognition = (window.SpeechRecognition || window.webkitSpeechRecognition) as any
 		recognitionRef.current = new SpeechRecognition()
 		recognitionRef.current.continuous = false
 		recognitionRef.current.interimResults = false
@@ -165,7 +163,7 @@ export default function ChatbotWidget() {
 			setIsListening(true)
 		}
 
-		recognitionRef.current.onresult = (event) => {
+		recognitionRef.current.onresult = (event: any) => {
 			const transcript = event.results[0][0].transcript
 			setInput(transcript)
 			setIsListening(false)
@@ -335,25 +333,6 @@ export default function ChatbotWidget() {
 	}
 
 	function translateText(text: string, targetLang: Language): string {
-		// Simple translation mapping for common beauty terms
-		const translationMap: Record<string, Record<Language, string>> = {
-			'lipstick': {
-				en: 'lipstick', hi: 'लिपस्टिक', ta: 'லிப்ஸ்டிக்', te: 'లిప్స్టిక్',
-				bn: 'লিপস্টিক', gu: 'લિપસ્ટિક', kn: 'ಲಿಪ್ಸ್ಟಿಕ್', ml: 'ലിപ്സ്റ്റിക്ക്',
-				mr: 'लिपस्टिक', pa: 'ਲਿਪਸਟਿਕ', ur: 'لپ اسٹک'
-			},
-			'foundation': {
-				en: 'foundation', hi: 'फाउंडेशन', ta: 'பவுண்டேஷன்', te: 'ఫౌండేషన్',
-				bn: 'ফাউন্ডেশন', gu: 'ફાઉન્ડેશન', kn: 'ಫೌಂಡೇಶನ್', ml: 'ഫൗണ്ടേഷൻ',
-				mr: 'फाउंडेशन', pa: 'ਫਾਉਂਡੇਸ਼ਨ', ur: 'فاؤنڈیشن'
-			},
-			'eyeshadow': {
-				en: 'eyeshadow', hi: 'आईशैडो', ta: 'ஐஷாடோ', te: 'ఐషాడో',
-				bn: 'আইশ্যাডো', gu: 'આઈશેડો', kn: 'ಐಶ್ಯಾಡೋ', ml: 'ഐഷാഡോ',
-				mr: 'आईशैडो', pa: 'ਆਈਸ਼ੈਡੋ', ur: 'آئی شیڈو'
-			}
-		}
-
 		// For now, return original text with basic language-specific responses
 		if (targetLang === 'hi') {
 			return text.replace(/lipstick/gi, 'लिपस्टिक').replace(/foundation/gi, 'फाउंडेशन')

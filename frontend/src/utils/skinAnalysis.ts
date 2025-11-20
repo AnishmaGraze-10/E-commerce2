@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs'
+// TensorFlow import removed as it's not currently used
 
 export interface SkinAnalysisResult {
   skinType: 'oily' | 'dry' | 'combination' | 'sensitive' | 'normal'
@@ -124,7 +124,7 @@ export class SkinAnalyzer {
     return { r: avgR, g: avgG, b: avgB, undertone }
   }
 
-  private analyzeTexture(data: Uint8ClampedArray, width: number, height: number): number {
+  private analyzeTexture(data: Uint8ClampedArray, _width: number, _height: number): number {
     // Simple texture analysis using variance
     let variance = 0
     let mean = 0
@@ -148,7 +148,7 @@ export class SkinAnalyzer {
     return Math.sqrt(variance) // Standard deviation as texture measure
   }
 
-  private detectSkinIssues(data: Uint8ClampedArray, width: number, height: number): SkinIssue[] {
+  private detectSkinIssues(data: Uint8ClampedArray, _width: number, _height: number): SkinIssue[] {
     const issues: SkinIssue[] = []
 
     // Simulate issue detection based on color analysis
