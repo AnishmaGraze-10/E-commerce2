@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { skinAnalyzer } from '../utils/skinAnalysis'
 import { useAuth } from '../context/AuthContext'
@@ -48,7 +48,7 @@ type UserContext = {
 	language?: Language
 }
 
-const TRANSLATIONS = {
+	const TRANSLATIONS = {
 	en: {
 		welcome: "Hi! I'm your AI Beauty Assistant ✨ I can help with skin analysis, AR try-ons, personalized routines, and product recommendations. What would you like to explore today?",
 		voicePrompt: "Click the microphone to speak or type your message",
@@ -78,12 +78,21 @@ const TRANSLATIONS = {
 		startAnalysis: "Skin Analysis தொடங்குங்கள்",
 		openAR: "AR Mode திறக்கவும்",
 		generateRoutine: "Routine உருவாக்குங்கள்"
+	},
+	te: {
+		welcome: "నమస్కారం! నేను మీ AI Beauty Assistant ✨ నేను skin analysis, AR try-ons, personalized routines మరియు product recommendations సహాయం చేయగలను. ఈరోజు మీరు ఏమి explore చేయాలనుకుంటున్నారు?",
+		voicePrompt: "మాట్లాడడానికి microphone పై click చేయండి లేదా message type చేయండి",
+		analyzing: "మీ skin-ను analyze చేస్తున్నాను...",
+		recommendations: "మీకు నా recommendations ఇక్కడ ఉన్నాయి:",
+		addToCart: "Cart-కు Add చేయండి",
+		startAnalysis: "Skin Analysis ప్రారంభించండి",
+		openAR: "AR Mode తెరవండి",
+		generateRoutine: "Routine సృష్టించండి"
 	}
 }
 
 type Message = { id: string; role: 'user' | 'bot'; text: string; type?: 'text' | 'product' | 'routine' | 'ar' | 'analysis' }
 type Product = { id: string; name: string; price: string; image: string; category: string; productId?: string }
-type BeautyRoutine = { time: string; steps: string[]; products: Product[] }
 
 const SAMPLE_PRODUCTS: Product[] = [
 	{ id: '1', name: 'Rose Pink Lipstick', price: '₹540', image: '/lipstick.jpg', category: 'lipstick' },
@@ -104,26 +113,11 @@ const TUTORIAL_VIDEOS = {
 	'eyeliner': 'https://youtube.com/watch?v=eyeliner-tutorial'
 }
 
-const BEAUTY_QUESTIONS = [
-	{ id: 'skin_type', question: 'What\'s your skin type?', options: ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal'] },
-	{ id: 'skin_concerns', question: 'What are your main skin concerns?', options: ['Acne', 'Dark spots', 'Dryness', 'Oiliness', 'Aging', 'Dark circles'] },
-	{ id: 'makeup_style', question: 'What makeup style do you prefer?', options: ['Natural', 'Glam', 'Minimal', 'Bold', 'Professional'] },
-	{ id: 'budget', question: 'What\'s your budget range?', options: ['Under ₹500', '₹500-1000', '₹1000-2000', 'Above ₹2000'] },
-	{ id: 'time_available', question: 'How much time do you have for skincare daily?', options: ['5 minutes', '10-15 minutes', '20-30 minutes', '30+ minutes'] }
-]
-
 const MOOD_LOOKS = {
 	party: { name: 'Party Glam', description: 'Bold eyes, statement lips, glowing skin', products: ['Gold Eyeshadow', 'Rose Lipstick'] },
 	office: { name: 'Professional', description: 'Natural makeup, subtle enhancement', products: ['Fair Foundation', 'Nude Lipstick'] },
 	wedding: { name: 'Bridal Elegance', description: 'Soft, romantic, long-lasting', products: ['Fair Foundation', 'Rose Lipstick', 'Gold Eyeshadow'] },
 	casual: { name: 'Everyday Fresh', description: 'Light coverage, natural glow', products: ['BB Cream', 'Tinted Lip Balm'] }
-}
-
-const SKIN_ANALYSIS = {
-	oily: { issues: ['Excess shine', 'Large pores'], routine: ['Gentle cleanser', 'Oil-free moisturizer', 'Clay mask weekly'] },
-	dry: { issues: ['Flakiness', 'Tightness'], routine: ['Hydrating cleanser', 'Rich moisturizer', 'Hyaluronic acid serum'] },
-	combination: { issues: ['Oily T-zone', 'Dry cheeks'], routine: ['Balancing cleanser', 'Different moisturizers for zones'] },
-	sensitive: { issues: ['Redness', 'Irritation'], routine: ['Fragrance-free products', 'Gentle formulas', 'Patch test new products'] }
 }
 
 export default function ChatbotWidget() {
@@ -132,14 +126,11 @@ export default function ChatbotWidget() {
 		{ id: 'm0', role: 'bot', text: TRANSLATIONS.en.welcome }
 	])
 	const [input, setInput] = useState('')
-	const [currentMode, setCurrentMode] = useState<'chat' | 'skin' | 'ar' | 'routine'>('chat')
-	const [userProfile, setUserProfile] = useState<Record<string, string>>({})
 	const [currentLanguage, setCurrentLanguage] = useState<Language>('en')
 	const [isListening, setIsListening] = useState(false)
 	const [isSpeaking, setIsSpeaking] = useState(false)
 	const [showLanguageSelector, setShowLanguageSelector] = useState(false)
 	const [userContext, setUserContext] = useState<UserContext>({})
-	const [conversationHistory, setConversationHistory] = useState<string[]>([])
 	const [catalogProducts, setCatalogProducts] = useState<any[]>([])
 	const { isAuthenticated } = useAuth()
 	const { addItem } = useCart()
@@ -153,8 +144,6 @@ export default function ChatbotWidget() {
 			})
 			.catch((error) => console.error('Failed to load product catalog for assistant', error))
 	}, [])
-
-	const [dynamicPreferences, setDynamicPreferences] = useState<Record<string, any>>({})
 	const listRef = useRef<HTMLDivElement>(null)
 	const recognitionRef = useRef<SpeechRecognition | null>(null)
 	const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -316,7 +305,7 @@ export default function ChatbotWidget() {
 		setUserContext(prev => ({ ...prev, ...newContext }))
 	}
 
-	function getDynamicRecommendations(context: UserContext, query: string): string {
+	function getDynamicRecommendations(context: UserContext): string {
 		let recommendations = ''
 		
 		// Dynamic product filtering based on context
@@ -347,7 +336,7 @@ export default function ChatbotWidget() {
 
 	function translateText(text: string, targetLang: Language): string {
 		// Simple translation mapping for common beauty terms
-		const translations: Record<string, Record<Language, string>> = {
+		const translationMap: Record<string, Record<Language, string>> = {
 			'lipstick': {
 				en: 'lipstick', hi: 'लिपस्टिक', ta: 'லிப்ஸ்டிக்', te: 'లిప్స్టిక్',
 				bn: 'লিপস্টিক', gu: 'લિપસ્ટિક', kn: 'ಲಿಪ್ಸ್ಟಿಕ್', ml: 'ലിപ്സ്റ്റിക്ക്',
@@ -391,53 +380,6 @@ export default function ChatbotWidget() {
 		) || null
 	}
 
-	function startBeautyRoutineGenerator() {
-		const routineMsg: Message = { 
-			id: crypto.randomUUID(), 
-			role: 'bot', 
-			text: "📋 **Let's Create Your Perfect Beauty Routine!**\n\nI'll ask you a few questions to personalize your routine. Ready to start?", 
-			type: 'routine' 
-		}
-		setMessages(prev => [...prev, routineMsg])
-		setCurrentMode('routine')
-	}
-
-	function handleProductRecommendation(query: string) {
-		const lower = query.toLowerCase()
-		let recommendations = SAMPLE_PRODUCTS.slice(0, 3)
-		
-		if (lower.includes('budget') || lower.includes('cheap')) {
-			recommendations = SAMPLE_PRODUCTS.filter(p => parseInt(p.price.replace('₹', '')) < 500)
-		} else if (lower.includes('premium') || lower.includes('expensive')) {
-			recommendations = SAMPLE_PRODUCTS.filter(p => parseInt(p.price.replace('₹', '')) > 600)
-		}
-		
-		const recMsg: Message = { 
-			id: crypto.randomUUID(), 
-			role: 'bot', 
-			text: `✨ **Personalized Recommendations for You:**\n\n${recommendations.map(p => `• ${p.name} - ${p.price}`).join('\n')}\n\nThese products are perfect for your needs!`, 
-			type: 'product' 
-		}
-		setMessages(prev => [...prev, recMsg])
-	}
-
-	function handleMoodBasedSuggestions(query: string) {
-		const lower = query.toLowerCase()
-		let mood = 'casual'
-		
-		if (lower.includes('party')) mood = 'party'
-		else if (lower.includes('office') || lower.includes('work')) mood = 'office'
-		else if (lower.includes('wedding') || lower.includes('bridal')) mood = 'wedding'
-		
-		const look = MOOD_LOOKS[mood as keyof typeof MOOD_LOOKS]
-		const moodMsg: Message = { 
-			id: crypto.randomUUID(), 
-			role: 'bot', 
-			text: `💫 **${look.name} Look**\n\n${look.description}\n\n**Recommended Products:**\n${look.products.map(p => `• ${p}`).join('\n')}\n\nClick 'Open AR Mode' to try this look virtually!`, 
-			type: 'ar' 
-		}
-		setMessages(prev => [...prev, moodMsg])
-	}
 
 	useEffect(() => {
 		if (!listRef.current) return
@@ -459,9 +401,6 @@ export default function ChatbotWidget() {
 		// Dynamic context analysis
 		const newContext = analyzeUserContext(text)
 		updateUserContext(newContext)
-		
-		// Update conversation history for context
-		setConversationHistory(prev => [...prev, text])
 		
 		const userMsg: Message = { id: crypto.randomUUID(), role: 'user', text }
 		setMessages(prev => [...prev, userMsg])
@@ -510,7 +449,7 @@ export default function ChatbotWidget() {
 		// 2. Dynamic Product Recommendations with Context
 		else if (lower.includes('recommend') || lower.includes('suggest') || lower.includes('what should i use')) {
 			if (context.preferences?.budget || context.skinType || context.preferences?.occasion) {
-				response = getDynamicRecommendations(context, input)
+				response = getDynamicRecommendations(context)
 				type = 'product'
 			} else {
 				response = "✨ **Dynamic Product Recommendations**\n\nI can suggest products based on your skin type, budget, and preferences. Tell me more about what you're looking for!"
@@ -611,7 +550,6 @@ export default function ChatbotWidget() {
 		return { text: response, type }
 	}
 
-	function generateBeautyResponse(input: string): { text: string; type: 'text' | 'product' | 'routine' | 'ar' } {
 		const lower = input.toLowerCase()
 		
 		// 1. Skin Analysis Feature
@@ -793,7 +731,6 @@ export default function ChatbotWidget() {
 			type: 'ar' 
 		}
 		setMessages(prev => [...prev, loadingMsg])
-		setCurrentMode('skin')
 
 		try {
 			// Get the video element from the Try-On page
@@ -868,7 +805,6 @@ ${analysisResult.recommendations.tips.map(tip => `• ${tip}`).join('\n')}`
 			type: 'ar' 
 		}
 		setMessages(prev => [...prev, arMsg])
-		setCurrentMode('ar')
 	}
 
 	return (

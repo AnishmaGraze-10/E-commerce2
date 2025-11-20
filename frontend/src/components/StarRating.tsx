@@ -30,8 +30,6 @@ export default function StarRating({ itemId, itemType, compact }: Props) {
 	async function rate(value: number) {
 		try {
 			const wasRated = typeof userRating === 'number'
-			const prevAverage = average
-			const prevTotal = total
 			let nextAverage = average
 			let nextTotal = total
 			if (wasRated) {

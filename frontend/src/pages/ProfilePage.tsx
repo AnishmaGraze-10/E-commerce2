@@ -32,7 +32,7 @@ type Order = {
 type Product = { _id: string; name: string; price: number; imageUrl: string }
 
 export default function ProfilePage() {
-  const { user, setAuth } = useAuth() as any
+  const { user } = useAuth() as any
   const [activeTab, setActiveTab] = useState<'info' | 'orders' | 'wishlist' | 'settings'>('info')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

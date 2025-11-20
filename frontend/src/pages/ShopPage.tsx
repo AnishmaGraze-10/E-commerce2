@@ -112,7 +112,7 @@ export default function ShopPage() {
 
 	const [showARPreview, setShowARPreview] = useState<string | null>(null)
 	const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
-	const searchTimeout = useRef<number | undefined>(undefined)
+	const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
 	useEffect(() => {
 		const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')

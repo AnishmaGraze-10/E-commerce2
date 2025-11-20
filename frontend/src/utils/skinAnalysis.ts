@@ -19,7 +19,6 @@ export interface SkinIssue {
 
 // Simulated skin analysis using computer vision techniques
 export class SkinAnalyzer {
-  private model: tf.LayersModel | null = null
   private isInitialized = false
 
   async initialize() {
@@ -71,11 +70,12 @@ export class SkinAnalyzer {
     const data = imageData.data
 
     // Analyze skin tone and texture
-    const skinTone = this.analyzeSkinTone(data)
+    this.analyzeSkinTone(data)
     const texture = this.analyzeTexture(data, canvas.width, canvas.height)
     const issues = this.detectSkinIssues(data, canvas.width, canvas.height)
 
     // Determine skin type based on analysis
+    const skinTone = this.analyzeSkinTone(data)
     const skinType = this.determineSkinType(skinTone, texture, issues)
     
     // Generate recommendations
@@ -240,7 +240,7 @@ export class SkinAnalyzer {
   }
 
   private determineSkinType(
-    skinTone: { r: number; g: number; b: number; undertone: string },
+    _skinTone: { r: number; g: number; b: number; undertone: string },
     texture: number,
     issues: SkinIssue[]
   ): 'oily' | 'dry' | 'combination' | 'sensitive' | 'normal' {

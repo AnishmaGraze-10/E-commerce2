@@ -21,8 +21,6 @@ export default function LoginPage() {
 		try {
 			await login(email, password)
 			// Decide destination based on role selection and server role
-			const storedUser = localStorage.getItem('user')
-			const u = storedUser ? JSON.parse(storedUser) : null
 			if (roleChoice === 'admin') {
 				// Verify access code on server; server will promote if valid and return token
 				const verifyRes = await axios.post('/api/auth/verify-admin', { accessCode: adminCode.trim() })
