@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
-import Product from './models/Product'
+import Product from './models/Product.js'
 
 dotenv.config()
 
