@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'sonner'
+import { useAuth } from '../context/AuthContext'
 
 type Product = {
 	_id: string
@@ -13,12 +14,21 @@ type Product = {
 }
 
 export default function WishlistPage() {
+	const { user } = useAuth()
 	const [wishlist, setWishlist] = useState<string[]>([])
 	const [products, setProducts] = useState<Product[]>([])
 	const [alerts, setAlerts] = useState<any[]>([])
 
 	useEffect(() => {
-		const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+		if (!user) {
+			setWishlist([])
+			setProducts([])
+			return
+		}
+		
+		// Use user-specific wishlist key
+		const wishlistKey = `wishlist_${user._id}`
+		const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
 		setWishlist(savedWishlist)
 
 		axios.get('/api/products').then(response => {
@@ -35,7 +45,7 @@ export default function WishlistPage() {
 				toast.success(`${list.length} wishlist alert${list.length>1?'s':''} available`)
 			}
 		}).catch(() => setAlerts([]))
-	}, [])
+	}, [user])
 
 	const productById = useMemo(() => {
 		const map: Record<string, Product> = {}
@@ -44,9 +54,11 @@ export default function WishlistPage() {
 	}, [products])
 
 	function removeFromWishlist(productId: string) {
+		if (!user) return
 		const newWishlist = wishlist.filter(id => id !== productId)
 		setWishlist(newWishlist)
-		localStorage.setItem('wishlist', JSON.stringify(newWishlist))
+		const wishlistKey = `wishlist_${user._id}`
+		localStorage.setItem(wishlistKey, JSON.stringify(newWishlist))
 		setProducts(products.filter(p => p._id !== productId))
 	}
 

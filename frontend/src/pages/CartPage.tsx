@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
@@ -6,24 +6,53 @@ import { useCart } from '../context/CartContext'
 export default function CartPage() {
 	const navigate = useNavigate()
 	const { isAuthenticated } = useAuth()
-	const { cart, loading, updateItemQuantity, removeItem } = useCart()
+	const { cart, loading, error, updateItemQuantity, removeItem, refreshCart } = useCart()
+	const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
 
-	const total = useMemo(
-		() => cart.items.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.qty, 0),
+	// Filter out items with invalid products and calculate total
+	const validItems = useMemo(
+		() => cart.items.filter(item => item.product !== null),
 		[cart.items]
 	)
 
-	const handleQuantityChange = (itemId: string, currentQty: number, delta: number) => {
+	const total = useMemo(
+		() => validItems.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.qty, 0),
+		[validItems]
+	)
+
+	const handleQuantityChange = async (itemId: string, currentQty: number, delta: number) => {
 		const nextQty = currentQty + delta
-		if (nextQty <= 0) {
-			removeItem(itemId).catch((err) => console.error('Failed to remove item', err))
-		} else {
-			updateItemQuantity(itemId, nextQty).catch((err) => console.error('Failed to update item qty', err))
+		setUpdatingItems(prev => new Set(prev).add(itemId))
+		try {
+			if (nextQty <= 0) {
+				await removeItem(itemId)
+			} else {
+				await updateItemQuantity(itemId, nextQty)
+			}
+		} catch (err) {
+			console.error('Failed to update cart item', err)
+		} finally {
+			setUpdatingItems(prev => {
+				const next = new Set(prev)
+				next.delete(itemId)
+				return next
+			})
 		}
 	}
 
-	const handleRemove = (itemId: string) => {
-		removeItem(itemId).catch((err) => console.error('Failed to remove item', err))
+	const handleRemove = async (itemId: string) => {
+		setUpdatingItems(prev => new Set(prev).add(itemId))
+		try {
+			await removeItem(itemId)
+		} catch (err) {
+			console.error('Failed to remove item', err)
+		} finally {
+			setUpdatingItems(prev => {
+				const next = new Set(prev)
+				next.delete(itemId)
+				return next
+			})
+		}
 	}
 
 	const handleCheckout = () => {
@@ -41,7 +70,15 @@ export default function CartPage() {
 	return (
 		<div className="container py-4">
 			<h2 className="mb-4">Cart</h2>
-			{cart.items.length === 0 ? (
+			{error && (
+				<div className="alert alert-danger d-flex justify-content-between align-items-center">
+					<span>{error}</span>
+					<button className="btn btn-sm btn-outline-danger" onClick={refreshCart}>
+						Retry
+					</button>
+				</div>
+			)}
+			{validItems.length === 0 ? (
 				<p>Your cart is empty.</p>
 			) : (
 				<>
@@ -56,33 +93,59 @@ export default function CartPage() {
 							</tr>
 						</thead>
 						<tbody>
-							{cart.items.map((item) => (
-								<tr key={item.id}>
-									<td>{item.product?.name ?? 'Product unavailable'}</td>
-									<td>₹{item.product?.price ?? 0}</td>
-									<td>
-										<button
-											className="btn btn-sm btn-secondary"
-											onClick={() => handleQuantityChange(item.id, item.qty, -1)}
-										>
-											-
-										</button>
-										<span className="mx-2">{item.qty}</span>
-										<button
-											className="btn btn-sm btn-secondary"
-											onClick={() => handleQuantityChange(item.id, item.qty, 1)}
-										>
-											+
-										</button>
-									</td>
-									<td>₹{((item.product?.price ?? 0) * item.qty).toFixed(2)}</td>
-									<td>
-										<button className="btn btn-sm btn-danger" onClick={() => handleRemove(item.id)}>
-											Remove
-										</button>
-									</td>
-								</tr>
-							))}
+							{validItems.map((item) => {
+								const isUpdating = updatingItems.has(item.id)
+								const hasProduct = item.product !== null
+								return (
+									<tr key={item.id} className={isUpdating ? 'opacity-50' : ''}>
+										<td>
+											<div className="d-flex align-items-center gap-3">
+												{item.product?.imageUrl && (
+													<img 
+														src={item.product.imageUrl} 
+														alt={item.product.name}
+														style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
+													/>
+												)}
+												<div>
+													<div className="fw-bold">{item.product?.name ?? 'Product unavailable'}</div>
+													{!hasProduct && (
+														<small className="text-danger">This product may have been removed</small>
+													)}
+												</div>
+											</div>
+										</td>
+										<td>₹{item.product?.price?.toFixed(2) ?? '0.00'}</td>
+										<td>
+											<button
+												className="btn btn-sm btn-secondary"
+												onClick={() => handleQuantityChange(item.id, item.qty, -1)}
+												disabled={isUpdating}
+											>
+												-
+											</button>
+											<span className="mx-2">{item.qty}</span>
+											<button
+												className="btn btn-sm btn-secondary"
+												onClick={() => handleQuantityChange(item.id, item.qty, 1)}
+												disabled={isUpdating}
+											>
+												+
+											</button>
+										</td>
+										<td>₹{((item.product?.price ?? 0) * item.qty).toFixed(2)}</td>
+										<td>
+											<button 
+												className="btn btn-sm btn-danger" 
+												onClick={() => handleRemove(item.id)}
+												disabled={isUpdating}
+											>
+												{isUpdating ? '...' : 'Remove'}
+											</button>
+										</td>
+									</tr>
+								)
+							})}
 						</tbody>
 					</table>
 					<div className="d-flex justify-content-between align-items-center">

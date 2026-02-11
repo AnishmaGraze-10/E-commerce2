@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import axios from 'axios'
 import { useAuth } from './AuthContext'
+import { useUserSession } from './UserSessionContext'
 
 type CartProduct = {
 	_id: string
@@ -62,6 +63,7 @@ function normalizeCartState(data: Partial<CartState> | undefined | null): CartSt
 
 export function CartProvider({ children }: { children: ReactNode }) {
 	const { token } = useAuth()
+	const { currentUserId, updateSessionData, getSession } = useUserSession()
 	const [cart, setCart] = useState<CartState>(emptyCart)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -71,15 +73,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const refreshCart = useCallback(async () => {
-		if (!token) {
+		if (!token || !currentUserId) {
 			setCart(emptyCart)
 			return
+		}
+
+		// Check if we have cached cart data in session
+		const session = getSession(currentUserId)
+		if (session?.cart) {
+			// Use cached data immediately for faster UX
+			updateCartState(session.cart)
 		}
 
 		setLoading(true)
 		try {
 			const { data } = await axios.get('/api/cart')
 			updateCartState(data)
+			// Update session with fresh cart data
+			if (currentUserId) {
+				updateSessionData(currentUserId, { cart: data })
+			}
 			setError(null)
 		} catch (err) {
 			console.error('Failed to load cart', err)
@@ -87,11 +100,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 		} finally {
 			setLoading(false)
 		}
-	}, [token, updateCartState])
+	}, [token, currentUserId, updateCartState, getSession, updateSessionData])
 
 	const addItem = useCallback(
 		async ({ productId, quantity = 1, shadeId }: AddPayload) => {
-			if (!token) {
+			if (!token || !currentUserId) {
 				throw new Error('AUTH_REQUIRED')
 			}
 			try {
@@ -101,70 +114,80 @@ export function CartProvider({ children }: { children: ReactNode }) {
 					shadeId
 				})
 				updateCartState(data)
+				// Update session with fresh cart data
+				updateSessionData(currentUserId, { cart: data })
 				setError(null)
 			} catch (err) {
 				console.error('Failed to add item to cart', err)
 				throw err
 			}
 		},
-		[token, updateCartState]
+		[token, currentUserId, updateCartState, updateSessionData]
 	)
 
 	const updateItemQuantity = useCallback(
 		async (itemId: string, qty: number) => {
-			if (!token) {
+			if (!token || !currentUserId) {
 				throw new Error('AUTH_REQUIRED')
 			}
 			try {
 				const { data } = await axios.patch(`/api/cart/item/${itemId}`, { qty })
 				updateCartState(data)
+				// Update session with fresh cart data
+				updateSessionData(currentUserId, { cart: data })
 				setError(null)
 			} catch (err) {
 				console.error('Failed to update cart item', err)
 				throw err
 			}
 		},
-		[token, updateCartState]
+		[token, currentUserId, updateCartState, updateSessionData]
 	)
 
 	const removeItem = useCallback(
 		async (itemId: string) => {
-			if (!token) {
+			if (!token || !currentUserId) {
 				throw new Error('AUTH_REQUIRED')
 			}
 			try {
 				const { data } = await axios.delete(`/api/cart/item/${itemId}`)
 				updateCartState(data)
+				// Update session with fresh cart data
+				updateSessionData(currentUserId, { cart: data })
 				setError(null)
 			} catch (err) {
 				console.error('Failed to remove cart item', err)
 				throw err
 			}
 		},
-		[token, updateCartState]
+		[token, currentUserId, updateCartState, updateSessionData]
 	)
 
 	const clearCart = useCallback(async () => {
-		if (!token) {
+		if (!token || !currentUserId) {
 			throw new Error('AUTH_REQUIRED')
 		}
 		try {
 			const { data } = await axios.delete('/api/cart')
 			updateCartState(data)
+			// Update session with fresh cart data
+			updateSessionData(currentUserId, { cart: data })
 			setError(null)
 		} catch (err) {
 			console.error('Failed to clear cart', err)
 			throw err
 		}
-	}, [token, updateCartState])
+	}, [token, currentUserId, updateCartState, updateSessionData])
 
 	useEffect(() => {
-		if (token) {
+		if (token && currentUserId) {
+			// Clear cart state first to prevent showing wrong user's data
+			setCart(emptyCart)
 			refreshCart()
 		} else {
 			setCart(emptyCart)
 		}
-	}, [token, refreshCart])
+	}, [token, currentUserId, refreshCart])
 
 	const value = useMemo(
 		() => ({

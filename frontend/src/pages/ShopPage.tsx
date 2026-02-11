@@ -92,7 +92,7 @@ interface FilterState {
 
 export default function ShopPage() {
 	const { theme, setTheme } = useTheme()
-	const { isAuthenticated } = useAuth()
+	const { isAuthenticated, user } = useAuth()
 	const { addItem } = useCart()
 	const [products, setProducts] = useState<Product[]>(curatedProducts)
 	const [filters, setFilters] = useState<FilterState>({
@@ -115,7 +115,13 @@ export default function ShopPage() {
 	const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
 	useEffect(() => {
-		const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+		if (!user) {
+			setWishlist([])
+			return
+		}
+		// Use user-specific wishlist key
+		const wishlistKey = `wishlist_${user._id}`
+		const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
 		setWishlist(savedWishlist)
 		
 		// Cleanup function to clear search timeout
@@ -124,7 +130,7 @@ export default function ShopPage() {
 				clearTimeout(searchTimeout.current)
 			}
 		}
-	}, [])
+	}, [user])
 
 	// Initial product fetch
 	useEffect(() => {
@@ -213,11 +219,13 @@ const ratings = ['3.0', '3.5', '4.0', '4.5', '5.0']
 	}
 
 	const toggleWishlist = (productId: string) => {
+		if (!user) return
 		setWishlist(prev => {
 			const newWishlist = prev.includes(productId) 
 				? prev.filter(id => id !== productId)
 				: [...prev, productId]
-			localStorage.setItem('wishlist', JSON.stringify(newWishlist))
+			const wishlistKey = `wishlist_${user._id}`
+			localStorage.setItem(wishlistKey, JSON.stringify(newWishlist))
 			return newWishlist
 		})
 	}

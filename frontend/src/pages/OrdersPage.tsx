@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 
 type Order = {
 	_id: string
@@ -8,11 +9,16 @@ type Order = {
 }
 
 export default function OrdersPage() {
+	const { user } = useAuth()
 	const [orders, setOrders] = useState<Order[]>([])
 
 	useEffect(() => {
-		axios.get('/api/orders/my').then(r => setOrders(r.data))
-	}, [])
+		if (!user) {
+			setOrders([])
+			return
+		}
+		axios.get('/api/orders/my').then(r => setOrders(r.data)).catch(() => setOrders([]))
+	}, [user])
 
 	return (
 		<div className="container">

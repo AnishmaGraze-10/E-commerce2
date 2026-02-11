@@ -91,7 +91,13 @@ export default function ProfilePage() {
 
     // Load wishlist from localStorage and map to products
     function loadWishlist() {
-      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+      if (!user) {
+        setWishlistIds([])
+        setWishlistProducts([])
+        return
+      }
+      const wishlistKey = `wishlist_${user._id}`
+      const savedWishlist = JSON.parse(localStorage.getItem(wishlistKey) || '[]')
       setWishlistIds(savedWishlist)
       if (savedWishlist.length > 0) {
         axios.get('/api/products').then(r => {
@@ -106,7 +112,7 @@ export default function ProfilePage() {
     load()
     loadOrders()
     loadWishlist()
-  }, [])
+  }, [user])
 
   async function handleProfileUpdate(e: React.FormEvent) {
     e.preventDefault()
@@ -175,9 +181,11 @@ export default function ProfilePage() {
   }
 
   function removeFromWishlist(productId: string) {
+    if (!user) return
     const newIds = wishlistIds.filter(id => id !== productId)
     setWishlistIds(newIds)
-    localStorage.setItem('wishlist', JSON.stringify(newIds))
+    const wishlistKey = `wishlist_${user._id}`
+    localStorage.setItem(wishlistKey, JSON.stringify(newIds))
     setWishlistProducts(wishlistProducts.filter(p => p._id !== productId))
   }
 

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import SwitchUser from './SwitchUser'
 
 export default function Navbar() {
 	const { isAuthenticated, user, logout } = useAuth()
@@ -42,6 +43,7 @@ export default function Navbar() {
 								{user?.role === 'admin' && (
 									<li className="nav-item"><NavLink className="nav-link" to="/admin">Admin</NavLink></li>
 								)}
+								<li className="nav-item"><SwitchUser /></li>
 								<li className="nav-item"><button className="btn btn-sm btn-outline-dark ms-2" onClick={handleLogout}>Logout</button></li>
 							</>
 						) : (

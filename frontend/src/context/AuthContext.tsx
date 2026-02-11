@@ -32,8 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const storedToken = localStorage.getItem('token')
 		const storedUser = localStorage.getItem('user')
 		if (storedToken && storedUser) {
+			const user = JSON.parse(storedUser)
 			setToken(storedToken)
-			setUser(JSON.parse(storedUser))
+			setUser(user)
+			// Ensure currentUser is set
+			if (user?._id) {
+				localStorage.setItem('currentUser', user._id)
+			}
 			axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 		}
 
@@ -47,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					setUser(null)
 					localStorage.removeItem('token')
 					localStorage.removeItem('user')
+					localStorage.removeItem('currentUser')
 					delete axios.defaults.headers.common['Authorization']
 					toast.error('Session expired. Please login again.')
 				}
@@ -64,7 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setUser(u)
 		localStorage.setItem('token', jwt)
 		localStorage.setItem('user', JSON.stringify(u))
+		// Store userId for user-specific data fetching
+		localStorage.setItem('currentUser', u._id)
 		axios.defaults.headers.common['Authorization'] = `Bearer ${jwt}`
+		// UserSessionContext will automatically pick up the user and token via useEffect
 	}
 
 	const login = async (email: string, password: string) => {
@@ -101,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setUser(null)
 		localStorage.removeItem('token')
 		localStorage.removeItem('user')
+		localStorage.removeItem('currentUser')
 		delete axios.defaults.headers.common['Authorization']
 	}
 
