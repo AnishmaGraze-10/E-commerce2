@@ -8,6 +8,7 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build:server": "cd server && npm ci && npm run build",
     "build": "npm run build:server && cd frontend && npm ci && npm run build",
+    "build:debug": "npm run build && echo \"===dist files===\" && ls -la server/dist || true && echo \"===routes===\" && ls -la server/dist/routes || true",
     "start": "cd server && npm start"
   },
   "dependencies": {
