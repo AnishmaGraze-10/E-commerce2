@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authMiddleware } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -10,8 +10,7 @@ router.post('/analyze', authMiddleware, async (req, res) => {
 	const undertone = 'neutral'
 	const suggestions = {
 		undertone,
-		shades:
-			undertone === 'warm' ? ['peach', 'coral', 'gold'] : undertone === 'cool' ? ['pink', 'berry', 'silver'] : ['nude', 'beige', 'balanced']
+		shades: ['nude', 'beige', 'balanced']
 	}
 	return res.json({ ok: true, imageUrl, ...suggestions })
 })

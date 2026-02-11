@@ -1,20 +1,25 @@
 import { Router } from 'express';
-import Product from '../models/Product';
+import Product from '../models/Product.js';
 const router = Router();
 router.get('/', async (req, res) => {
-    const { q, category, minPrice, maxPrice, sort } = req.query;
+    const { q, category, minPrice, maxPrice, sort, rating } = req.query;
     const filter = {};
-    if (q)
-        filter.name = { $regex: q, $options: 'i' };
+    const queryKey = q || req.query.query; // support both q and query
+    if (queryKey)
+        filter.name = { $regex: queryKey, $options: 'i' };
     if (category)
         filter.category = category;
     if (minPrice || maxPrice)
         filter.price = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
+    if (rating)
+        filter.averageRating = { $gte: Number(rating) };
     let query = Product.find(filter);
     if (sort === 'price_asc')
         query = query.sort({ price: 1 });
     else if (sort === 'price_desc')
         query = query.sort({ price: -1 });
+    else if (sort === 'rating_desc')
+        query = query.sort({ averageRating: -1, totalRatings: -1 });
     else
         query = query.sort({ createdAt: -1 });
     const products = await query;

@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import Cart from '../models/Cart'
-import Product from '../models/Product'
-import { authMiddleware } from '../middleware/auth'
+import Cart from '../models/Cart.js'
+import Product from '../models/Product.js'
+import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -55,7 +55,10 @@ async function getOrCreateCart(userId: string) {
 router.get('/', authMiddleware, async (req: any, res) => {
 	const userId = req.user._id
 	try {
-		const cart = await Cart.findOne({ userId }).populate('items.productId')
+		const cart = await Cart.findOne({ userId }).populate({
+			path: 'items.productId',
+			model: 'Product'
+		})
 		res.json(buildCartResponse(cart, userId))
 	} catch (error) {
 		console.error('Cart fetch failed', error)
@@ -89,7 +92,10 @@ router.post('/add', authMiddleware, async (req: any, res) => {
 		}
 
 		await cart.save()
-		await cart.populate('items.productId')
+		await cart.populate({
+			path: 'items.productId',
+			model: 'Product'
+		})
 		res.json(buildCartResponse(cart, userId))
 	} catch (error) {
 		console.error('Add to cart failed', error)
@@ -110,7 +116,7 @@ router.patch('/item/:itemId', authMiddleware, async (req: any, res) => {
 
 	try {
 		const cart = await getOrCreateCart(userId)
-		const item = cart.items.id(itemId)
+		const item = (cart.items as any).id(itemId)
 		if (!item) return res.status(404).json({ message: 'Cart item not found' })
 
 		if (nextQty === 0) {
@@ -120,7 +126,10 @@ router.patch('/item/:itemId', authMiddleware, async (req: any, res) => {
 		}
 
 		await cart.save()
-		await cart.populate('items.productId')
+		await cart.populate({
+			path: 'items.productId',
+			model: 'Product'
+		})
 		res.json(buildCartResponse(cart, userId))
 	} catch (error) {
 		console.error('Update cart item failed', error)
@@ -135,12 +144,15 @@ router.delete('/item/:itemId', authMiddleware, async (req: any, res) => {
 
 	try {
 		const cart = await getOrCreateCart(userId)
-		const item = cart.items.id(itemId)
+		const item = (cart.items as any).id(itemId)
 		if (!item) return res.status(404).json({ message: 'Cart item not found' })
 
 		item.deleteOne()
 		await cart.save()
-		await cart.populate('items.productId')
+		await cart.populate({
+			path: 'items.productId',
+			model: 'Product'
+		})
 		res.json(buildCartResponse(cart, userId))
 	} catch (error) {
 		console.error('Remove cart item failed', error)

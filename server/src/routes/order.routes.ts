@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import Order from '../models/Order'
-import Product from '../models/Product'
-import { requireAuth } from '../middleware/auth'
-import { logActivity } from '../utils/logger'
+import Order from '../models/Order.js'
+import Product from '../models/Product.js'
+import { requireAuth } from '../middleware/auth.js'
+import { logActivity } from '../utils/logger.js'
 
 const router = Router()
 

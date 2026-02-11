@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 export function requireAuth(req, res, next) {
     const header = req.headers.authorization || '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -20,3 +20,5 @@ export function requireAdmin(req, res, next) {
         return res.status(403).json({ message: 'Forbidden' });
     return next();
 }
+// Backwards-compatible named export used by new routes
+export const authMiddleware = requireAuth;

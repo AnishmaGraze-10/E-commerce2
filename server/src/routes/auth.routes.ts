@@ -1,11 +1,10 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import User from '../models/User'
-import { logActivity } from '../utils/logger'
-import { requireAuth } from '../middleware/auth'
+import User from '../models/User.js'
+import { logActivity } from '../utils/logger.js'
+import { requireAuth } from '../middleware/auth.js'
 import crypto from 'crypto'
-import User from '../models/User'
 
 const router = Router()
 

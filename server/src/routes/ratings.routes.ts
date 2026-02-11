@@ -1,8 +1,8 @@
 import { Router } from 'express'
-import { requireAuth } from '../middleware/auth'
-import Rating from '../models/Rating'
-import Product from '../models/Product'
-import Diary from '../models/Diary'
+import { requireAuth } from '../middleware/auth.js'
+import Rating from '../models/Rating.js'
+import Product from '../models/Product.js'
+import Diary from '../models/Diary.js'
 import mongoose from 'mongoose'
 import multer from 'multer'
 import fs from 'fs'
@@ -137,7 +137,7 @@ router.post('/upload', requireAuth, upload.single('file'), async (req: any, res)
 // CSV export for ratings
 router.get('/export', async (_req, res) => {
   try {
-    const rows = await Rating.find({}).lean()
+    const rows = await Rating.find({}).lean() as any[]
     res.setHeader('Content-Type', 'text/csv')
     res.setHeader('Content-Disposition', 'attachment; filename="ratings.csv"')
     // Write header
